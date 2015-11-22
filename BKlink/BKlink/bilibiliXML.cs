@@ -27,7 +27,7 @@ namespace BKlink
         {
             public double time;
             public DanmuType type;
-            public Color color;
+            public Brush color;
             public string message;
             public int x, y, w;
         }
@@ -61,6 +61,7 @@ namespace BKlink
         {
             int val = 0;
             int count = 0;
+            avid += "/";
             //if (avid.Contains("av")) avid = avid.Substring(avid.IndexOf("av"));
             for (int i = 0; i < avid.Length; i++)
             {
@@ -82,9 +83,9 @@ namespace BKlink
 
 
         //获取弹幕信息
-        public static List<DanmuInfo>[] GetbilibiliXML(int avid,List<string> namelist=null)
+        public static List<DanmuInfo>[] GetbilibiliXML(int avid, List<string> namelist = null)
         {
-            string v = HttpGetPage(string.Format(bilibiliURLHead, avid,1));
+            string v = HttpGetPage(string.Format(bilibiliURLHead, avid, 1));
 
             int ppos = v.IndexOf("<option");
             int p = 1;
@@ -92,12 +93,12 @@ namespace BKlink
             if (ppos != -1)
             {
 
-                string[] fp = v.Substring(ppos,  v.LastIndexOf("</option>")-ppos+10).Split('\n');
+                string[] fp = v.Substring(ppos, v.LastIndexOf("</option>") - ppos + 10).Split('\n');
                 if (namelist != null)
                     namelist.Clear();
                 p = 0;
                 id = new int[fp.Length];
-                for (int i=0;i<fp.Length;i++)
+                for (int i = 0; i < fp.Length; i++)
                 {
                     int idx = GetAVID(fp[i]);
                     if (idx != -1)
@@ -106,16 +107,16 @@ namespace BKlink
                         {
                             string fv = fp[i];
                             ppos = fv.IndexOf('>');
-                            namelist.Add(fv.Substring(ppos + 1, fv.LastIndexOf('<') - ppos-1));
+                            namelist.Add(fv.Substring(ppos + 1, fv.LastIndexOf('<') - ppos - 1));
                         }
                         p++;
                     }
                 }
                 if (p == 0) p = 1;
-                for (int i=0;i< p; i++)
+                for (int i = 0; i < p; i++)
                 {
-                    if(i!=0)
-                        v = HttpGetPage(string.Format(bilibiliURLHead, avid, i+1));
+                    if (i != 0)
+                        v = HttpGetPage(string.Format(bilibiliURLHead, avid, i + 1));
                     string vx = v.Substring(v.IndexOf("cid="));
                     int ix = vx.IndexOf('&');
                     vx = vx.Substring(4, ix - 4);
@@ -142,6 +143,18 @@ namespace BKlink
                 List<DanmuInfo> dx = new List<DanmuInfo>();
                 string url = string.Format(bilibilixmlHead, id[i]);
                 v = HttpGetPage(url);
+                //WebClient wc = new WebClient();
+                //byte[] data=wc.DownloadData(url);
+                //StreamReader reader = new StreamReader(new DeflateStream(new MemoryStream(data), CompressionMode.Decompress,true));
+                //v = reader.ReadToEnd();
+                ////reader.Close();
+                //v = reader.ReadToEnd();
+                //reader.Close();
+                if (v == null||v==string.Empty)
+                {
+                    dxlist[i] = dx;
+                    continue;
+                }
                 XmlDocument danmuxml = new XmlDocument();
                 danmuxml.LoadXml(v);
                 foreach (XmlNode node in danmuxml.GetElementsByTagName("d"))
@@ -168,7 +181,7 @@ namespace BKlink
                     }
                     dan.time = double.Parse(info[0]);
                     int color = int.Parse(info[3]);
-                    dan.color = Color.FromArgb((color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff);
+                    dan.color = new SolidBrush(Color.FromArgb((color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff));
                     dan.message = node.FirstChild.Value;
                     dx.Add(dan);
                 }
@@ -189,6 +202,7 @@ namespace BKlink
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
                 Stream stream = response.GetResponseStream();
                 string v=null;
+                stream.ReadTimeout = 5000;
                 if (response.ContentEncoding.Contains("gzip")||gzip)
                 {
                     StreamReader reader = new StreamReader(new GZipStream(stream, CompressionMode.Decompress));
@@ -199,6 +213,8 @@ namespace BKlink
                 {
                     StreamReader reader = new StreamReader(new DeflateStream(stream, CompressionMode.Decompress));
                     v = reader.ReadToEnd();
+                    if(v==string.Empty||v==null)
+                        v = reader.ReadToEnd();
                     reader.Close();
                      
                 }
@@ -221,7 +237,7 @@ namespace BKlink
         static List<DanmuInfo> danmudata=null;
         static Bitmap map;
         static Graphics draw;
-        static Font drawfont = new Font("宋体", 25);
+        static Font drawfont = new Font("黑体", 24);
         static int danmucount;
         static int DW, DH;
         static Color backcolor=Color.Black;
@@ -234,53 +250,73 @@ namespace BKlink
         //static Font infofont= new Font("宋体", 12);
         static bool clearflag = false;
         static bool pauseflag = false;
-        static Timer playtimer;
+        //static Timer playtimer;
         static Int64 starttime;
         static Int64 sectick;
         static double offsettime;
-        static int updatetick;
+        static int FontSize = 32;
+        static int movespeed = 5;
+        static int savemovespeed = 5;
+        //static int updatetick;
         public static void StartPlay(int w, int h, Graphics g,Color back,Font font=null)
         {
             if (!playstate)
             {
                 DW = w;
                 DH = h;
-                if (font != null) drawfont = font;
+                movespeed = savemovespeed;
+                double addspeed = (double)w / 810F;
+                if(addspeed>1)
+                movespeed =(int)(movespeed*addspeed);
+                //if (font != null) drawfont = font;
                 map = new Bitmap(w, h);
                 draw = Graphics.FromImage(map);
                 playstate = true;
                 danmucount = 0;
                 drawtime = 0;
                 drawinfo.Clear();
-                ysize = (int)(drawfont.Size * 1.2);
+                ysize = FontSize;
                 moveLine = new DanmuInfo[(int)(h / ysize)];
                 centLine = new DanmuInfo[(int)(h / ysize)];
                 backcolor = back;
                 pauseflag = clearflag = false;
-                updatetick = 0;
+                //updatetick = 0;
                 offsettime = 0;
                 QueryPerformanceCounter(ref starttime);
                 QueryPerformanceFrequency(ref sectick);
-                playtimer = new Timer((object c) => {
-                    if (pauseflag) return;
-                    drawtime += 0.05;
-                    if (++updatetick == 10)
-                    {
-                        updatetick = 0;
-                        Int64 val=0;
-                        QueryPerformanceCounter(ref val);
-                        val = (val - starttime)/sectick;
-                        drawtime = val+offsettime;
-                    }
-                });
-                playtimer.Change(50, 50);
+                sectick /= 1000;
+                //////playtimer = new Timer((object c) => {
+                //    if (pauseflag) return;
+                //    //drawtime += 0.05;
+                //    //if (++updatetick == 10)
+                //    //{
+                //    //    updatetick = 0;
+                //    //    Int64 val=0;
+                //    //    QueryPerformanceCounter(ref val);
+                //    //    val = (val - starttime)/sectick/1000;
+                //    //    drawtime = val+offsettime;
+                //    //}
+                //    Int64 val = 0;
+                //    QueryPerformanceCounter(ref val);
+                //    val = (val - starttime) / sectick;
+                //    drawtime = (((double)(int)val) / 1000F)+offsettime;
+                //});
+                //playtimer.Change(50, 50);
                 Task.Run(() => {
                     while (playstate)
                     {
                         if (pauseflag)
+                        {
+                            Thread.Sleep(1);
                             continue;
+                        }
                         if (danmudata != null)
                         {
+                            if (danmucount >= danmudata.Count)
+                            {
+                                playstate = false;
+                                continue;
+                            }
                             if (danmucount < danmudata.Count)
                                 while (true)
                                 {
@@ -298,8 +334,8 @@ namespace BKlink
                                                     danmucount++;
                                                     info.x = DW;
                                                     info.y = ysize * i;
-                                                    info.w = (int)(drawfont.Size * info.message.Length);
-                                                    draw.DrawString(info.message, drawfont, new SolidBrush(info.color), info.x, info.y);
+                                                    info.w = (int)(FontSize * info.message.Length);
+                                                    draw.DrawString(info.message, drawfont, info.color, info.x, info.y);
                                                     drawinfo.Add(info);
                                                     moveLine[i] = info;
                                                     break;
@@ -309,8 +345,8 @@ namespace BKlink
                                                     danmucount++;
                                                     info.x = DW;
                                                     info.y = ysize * i;
-                                                    info.w = (int)(drawfont.Size * info.message.Length);
-                                                    draw.DrawString(info.message, drawfont, new SolidBrush(info.color), info.x, info.y);
+                                                    info.w = (int)(FontSize * info.message.Length);
+                                                    draw.DrawString(info.message, drawfont, info.color, info.x, info.y);
                                                     drawinfo.Add(info);
                                                     moveLine[i] = info;
                                                     break;
@@ -323,12 +359,17 @@ namespace BKlink
                                                 if (centLine[i] == null)
                                                 {
                                                     danmucount++;
-                                                    
+                                                    int wh = 0;
+                                                    string message = info.message;
+                                                    for (int j = 0; j < message.Length; j++)
+                                                        if (message[j] > 128)
+                                                            wh += FontSize;
+                                                        else
+                                                            wh += FontSize >> 1;
                                                     info.y = ysize * i;
-                                                    info.w = (int)(drawfont.Size * info.message.Length);
-                                                    info.x = DW / 2 - info.w / 2;
-                                                    info.w = 600;
-                                                    draw.DrawString(info.message, drawfont, new SolidBrush(info.color), info.x, info.y);
+                                                    info.x = DW / 2 - wh / 2;
+                                                    info.w = 600 + info.message.Length * 20;
+                                                    draw.DrawString(info.message, drawfont, info.color, info.x, info.y);
                                                     drawinfo.Add(info);
                                                     centLine[i] = info;
                                                     break;
@@ -341,11 +382,17 @@ namespace BKlink
                                                 if (centLine[i] == null)
                                                 {
                                                     danmucount++;
-                                                    info.x = DW;
+                                                    int wh = 0;
+                                                    string message = info.message;
+                                                    for (int j = 0; j < message.Length; j++)
+                                                        if (message[j] > 128)
+                                                            wh += FontSize;
+                                                        else
+                                                            wh += FontSize>>1;
                                                     info.y = ysize * i;
-                                                    info.x = DW / 2 - info.w / 2;
-                                                    info.w = (int)(drawfont.Size * info.message.Length);
-                                                    draw.DrawString(info.message, drawfont, new SolidBrush(info.color), info.x, info.y);
+                                                    info.x = DW / 2 - wh / 2;
+                                                    info.w = 600 + info.message.Length * 20;
+                                                    draw.DrawString(info.message, drawfont, info.color, info.x, info.y);
                                                     drawinfo.Add(info);
                                                     centLine[i] = info;
                                                     break;
@@ -358,7 +405,6 @@ namespace BKlink
                                         break;
                                 }
                         }
-                        draw.Clear(backcolor);
                         removeinfo.Clear();
                         if (clearflag)
                         {
@@ -377,17 +423,17 @@ namespace BKlink
                                     switch (info.type)
                                     {
                                         case DanmuType.move:
-                                            info.x -= 5;
+                                            info.x -= movespeed + info.message.Length / 10;
                                             lock (draw)
-                                                draw.DrawString(info.message, drawfont, new SolidBrush(info.color), info.x, info.y);
+                                                draw.DrawString(info.message, drawfont, info.color, info.x, info.y);
                                             if (info.x < -info.w)
                                                 removeinfo.Add(info);
                                             break;
                                         case DanmuType.top:
                                         case DanmuType.bottom:
-                                            info.w -= 5;
+                                            info.w -= movespeed;
                                             lock (draw)
-                                                draw.DrawString(info.message, drawfont, new SolidBrush(info.color), info.x, info.y);
+                                                draw.DrawString(info.message, drawfont, info.color, info.x, info.y);
 
                                             if (info.w < -info.w)
                                             {
@@ -411,15 +457,15 @@ namespace BKlink
                                     switch (info.type)
                                     {
                                         case DanmuType.move:
-                                            info.x -= 5;
-                                            draw.DrawString(info.message, drawfont, new SolidBrush(info.color), info.x, info.y);
+                                            info.x -= movespeed + info.message.Length / 10;
+                                            draw.DrawString(info.message, drawfont, info.color, info.x, info.y);
                                             if (info.x < -info.w)
                                                 removeinfo.Add(info);
                                             break;
                                         case DanmuType.top:
                                         case DanmuType.bottom:
-                                            info.w -= 5;
-                                            draw.DrawString(info.message, drawfont, new SolidBrush(info.color), info.x, info.y);
+                                            info.w -= movespeed;
+                                            draw.DrawString(info.message, drawfont, info.color, info.x, info.y);
                                             if (info.w < -info.w)
                                             {
                                                 removeinfo.Add(info);
@@ -445,9 +491,28 @@ namespace BKlink
                         //draw.DrawString((int)(drawtime / 60) + ":" + (int)(drawtime % 60), infofont, Brushes.Blue, 10, DH - 16);
                         if(g!=null)
                             g.DrawImage(map, 0, 0);
+
+                        Int64 val = 0;
+                        QueryPerformanceCounter(ref val);
+                        val = (val - starttime) / sectick;
+                        drawtime = (((double)(int)val) / 1000F) + offsettime;
+                        draw.Clear(backcolor);
                         Thread.Sleep(20);
                     }
                 });
+            }
+        }
+
+        public static int DrawMoveSpeed
+        {
+            get { return savemovespeed; }
+            set
+            {
+                savemovespeed = value;
+                movespeed = value;
+                double addspeed = (double)DW / 810F;
+                if (addspeed > 1)
+                    movespeed = (int)(movespeed * addspeed);
             }
         }
 
@@ -460,6 +525,15 @@ namespace BKlink
         public static bool ParallelPlay
         {
             get; set;
+        }
+
+        public static Font DisplayFont
+        {
+            get { return drawfont; }
+            set {
+                drawfont = value;
+                FontSize = (int)Math.Round(drawfont.Size * 1.333333);
+            }
         }
 
         public static bool Pause
@@ -512,7 +586,7 @@ namespace BKlink
         public static void StopDanmu()
         {
             playstate = false;
-            playtimer.Dispose();
+            //playtimer.Dispose();
             map.Dispose();
             draw.Dispose();
         }

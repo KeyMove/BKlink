@@ -49,6 +49,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="bilibiliXML.cs" />
+    <Compile Include="DanmuSetting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DanmuSetting.Designer.cs">
+      <DependentUpon>DanmuSetting.cs</DependentUpon>
+    </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -57,6 +63,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="DanmuSetting.resx">
+      <DependentUpon>DanmuSetting.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.Sub = new System.Windows.Forms.Button();
             this.URLtext = new System.Windows.Forms.TextBox();
@@ -38,11 +39,15 @@
             this.DanmuInfo = new System.Windows.Forms.Label();
             this.time = new System.Windows.Forms.TextBox();
             this.conttab = new System.Windows.Forms.Panel();
+            this.SetInfo = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.设置字体ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.parall = new System.Windows.Forms.CheckBox();
             this.ViedoList = new System.Windows.Forms.ListBox();
             this.PlayInfo = new System.Windows.Forms.Label();
             this.pause = new System.Windows.Forms.Button();
-            this.parall = new System.Windows.Forms.CheckBox();
+            this.弹幕设置ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.conttab.SuspendLayout();
+            this.SetInfo.SuspendLayout();
             this.SuspendLayout();
             // 
             // Sub
@@ -118,6 +123,7 @@
             // conttab
             // 
             this.conttab.BackColor = System.Drawing.Color.LightGray;
+            this.conttab.ContextMenuStrip = this.SetInfo;
             this.conttab.Controls.Add(this.parall);
             this.conttab.Controls.Add(this.ViedoList);
             this.conttab.Controls.Add(this.ClassInfo);
@@ -135,6 +141,32 @@
             this.conttab.Name = "conttab";
             this.conttab.Size = new System.Drawing.Size(794, 38);
             this.conttab.TabIndex = 3;
+            // 
+            // SetInfo
+            // 
+            this.SetInfo.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.设置字体ToolStripMenuItem,
+            this.弹幕设置ToolStripMenuItem});
+            this.SetInfo.Name = "SetInfo";
+            this.SetInfo.Size = new System.Drawing.Size(153, 70);
+            // 
+            // 设置字体ToolStripMenuItem
+            // 
+            this.设置字体ToolStripMenuItem.Name = "设置字体ToolStripMenuItem";
+            this.设置字体ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.设置字体ToolStripMenuItem.Text = "设置字体";
+            this.设置字体ToolStripMenuItem.Click += new System.EventHandler(this.设置字体ToolStripMenuItem_Click);
+            // 
+            // parall
+            // 
+            this.parall.AutoSize = true;
+            this.parall.Location = new System.Drawing.Point(710, 1);
+            this.parall.Name = "parall";
+            this.parall.Size = new System.Drawing.Size(84, 16);
+            this.parall.TabIndex = 4;
+            this.parall.Text = "多线程加速";
+            this.parall.UseVisualStyleBackColor = true;
+            this.parall.CheckedChanged += new System.EventHandler(this.parall_CheckedChanged);
             // 
             // ViedoList
             // 
@@ -166,16 +198,12 @@
             this.pause.Visible = false;
             this.pause.Click += new System.EventHandler(this.pause_Click);
             // 
-            // parall
+            // 弹幕设置ToolStripMenuItem
             // 
-            this.parall.AutoSize = true;
-            this.parall.Location = new System.Drawing.Point(710, 1);
-            this.parall.Name = "parall";
-            this.parall.Size = new System.Drawing.Size(84, 16);
-            this.parall.TabIndex = 4;
-            this.parall.Text = "多线程加速";
-            this.parall.UseVisualStyleBackColor = true;
-            this.parall.CheckedChanged += new System.EventHandler(this.parall_CheckedChanged);
+            this.弹幕设置ToolStripMenuItem.Name = "弹幕设置ToolStripMenuItem";
+            this.弹幕设置ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.弹幕设置ToolStripMenuItem.Text = "弹幕设置";
+            this.弹幕设置ToolStripMenuItem.Click += new System.EventHandler(this.弹幕设置ToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -192,6 +220,7 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             this.conttab.ResumeLayout(false);
             this.conttab.PerformLayout();
+            this.SetInfo.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -211,6 +240,9 @@
         private System.Windows.Forms.ListBox ViedoList;
         private System.Windows.Forms.Label PlayInfo;
         private System.Windows.Forms.CheckBox parall;
+        private System.Windows.Forms.ContextMenuStrip SetInfo;
+        private System.Windows.Forms.ToolStripMenuItem 设置字体ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 弹幕设置ToolStripMenuItem;
     }
 }
 

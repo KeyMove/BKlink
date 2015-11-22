@@ -38,7 +38,7 @@ namespace BKlink
         List<bilibiliXML.DanmuInfo>[] list = null;
         bool state = false;
         Graphics g;
-        int mx=-1, my=-1;
+        int mx = -1, my = -1;
         int hidetime = 0;
         int pid;
         public Form1()
@@ -49,7 +49,7 @@ namespace BKlink
         private void Sub_Click(object sender, EventArgs e)
         {
             List<string> namelist = new List<string>();
-            list = bilibiliXML.GetbilibiliXML(URLtext.Text,namelist);
+            list = bilibiliXML.GetbilibiliXML(URLtext.Text, namelist);
             if (list != null)
             {
                 ViedoList.Items.Clear();
@@ -64,12 +64,16 @@ namespace BKlink
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            this.TopMost = true;
+            //this.TopMost = true;
+            this.FormClosed += (object s, FormClosedEventArgs ex) => {
+                GC.Collect();
+                System.Environment.Exit(0);
+            };
             Timer t = new Timer();
             t.Interval = 300;
             t.Tick += (object s, EventArgs er) =>
             {
-                IntPtr handle=GetForegroundWindow();
+                IntPtr handle = GetForegroundWindow();
                 StringBuilder sb = new StringBuilder(256);
                 GetWindowText(handle, sb, 256);
                 WindowInfo.Text = sb.ToString();
@@ -77,40 +81,40 @@ namespace BKlink
                 GetClassName(handle, sb, 256);
                 ClassInfo.Text = sb.ToString();
                 int v = 0;
-                int x=GetWindowThreadProcessId(handle,out v);
-                MethodInfo.Text =Process.GetProcessById(v).ProcessName;
+                int x = GetWindowThreadProcessId(handle, out v);
+                MethodInfo.Text = Process.GetProcessById(v).ProcessName;
                 if (bilibiliXML.isPlay)
+                {
                     this.TopMost = true;
-                else
-                    this.TopMost = false;
-                if (!time.Focused)
-                {
-                    double xa = bilibiliXML.Time;
-                    time.Text = "" + (int)(xa / 60) + ":"+(int)(xa % 60);
-                }
-
-                if (bilibiliXML.isPlay)
-                {
-                    Point p = Cursor.Position;
-                    if (p.X == mx && p.Y == my&& !time.Focused)
+                    if (!time.Focused)
                     {
-                        if (hidetime < 9)
+                        double xa = bilibiliXML.Time;
+                        time.Text = "" + (int)(xa / 60) + ":" + (int)(xa % 60);
+                    }
+
+                    if (bilibiliXML.isPlay)
+                    {
+                        Point p = Cursor.Position;
+                        if (p.X == mx && p.Y == my && !time.Focused && !conttab.Bounds.Contains(this.PointToClient(p)))
                         {
-                            if (++hidetime >= 9)
+                            if (hidetime < 9)
                             {
-                                hidetime = 0;
-                                if (conttab.Visible)
-                                    conttab.Visible = false;
+                                if (++hidetime >= 9)
+                                {
+                                    hidetime = 0;
+                                    if (conttab.Visible)
+                                        conttab.Visible = false;
+                                }
                             }
                         }
+                        else
+                        {
+                            if (!conttab.Visible)
+                                conttab.Visible = true;
+                        }
+                        mx = p.X;
+                        my = p.Y;
                     }
-                    else
-                    {
-                        if (!conttab.Visible)
-                            conttab.Visible = true;
-                    }
-                    mx = p.X;
-                    my = p.Y;
                 }
             };
             t.Start();
@@ -127,11 +131,12 @@ namespace BKlink
                 g = this.CreateGraphics();
                 state = true;
                 bilibiliXML.SetupDanmu(list[pid]);
-                bilibiliXML.StartPlay(this.Width, this.Height, g, Color.Gray);
+                bilibiliXML.StartPlay(this.Width, this.Height - 24, g, Color.Gray);
                 pause.Enabled = true;
                 pause.BackColor = Color.Maroon;
                 pause.Text = "暂停";
                 pause.Visible = true;
+                this.TopMost = false;
             }
             else
             {
@@ -143,7 +148,7 @@ namespace BKlink
                 bilibiliXML.StopDanmu();
                 pause.Visible = false;
             }
-            
+
         }
 
         private void pause_Click(object sender, EventArgs e)
@@ -167,8 +172,8 @@ namespace BKlink
             if (ViedoList.SelectedIndex != pid)
             {
                 pid = ViedoList.SelectedIndex;
-                if(bilibiliXML.isPlay)
-                    PlayInfo.Text = "正在播放"+ ViedoList.Items[pid];
+                if (bilibiliXML.isPlay)
+                    PlayInfo.Text = "正在播放" + ViedoList.Items[pid];
                 else
                     PlayInfo.Text = "已选择" + ViedoList.Items[pid];
                 DanmuInfo.Text = "弹幕数量:" + list[pid].Count;
@@ -180,6 +185,30 @@ namespace BKlink
         private void parall_CheckedChanged(object sender, EventArgs e)
         {
             bilibiliXML.ParallelPlay = ((CheckBox)sender).Checked;
+        }
+
+        FontDialog fd = new FontDialog();
+        private void 设置字体ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            if (fd.ShowDialog() == DialogResult.OK)
+            {
+                bilibiliXML.DisplayFont = fd.Font;
+            }
+        }
+
+        DanmuSetting setting;
+        private void 弹幕设置ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            
+
+            if (setting == null)
+                setting = new DanmuSetting((int op, int speed) =>
+                {
+                    bilibiliXML.DrawMoveSpeed = speed + 2;
+                    this.Opacity = (op + 10) / 100F;
+                });
+            setting.ShowDialog();
         }
 
         private void time_KeyPress(object sender, KeyPressEventArgs e)
