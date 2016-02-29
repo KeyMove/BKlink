@@ -53,6 +53,7 @@
             // 
             // speed
             // 
+            this.speed.LargeChange = 1;
             this.speed.Location = new System.Drawing.Point(125, 24);
             this.speed.Name = "speed";
             this.speed.Orientation = System.Windows.Forms.Orientation.Vertical;

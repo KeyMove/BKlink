@@ -80,13 +80,17 @@ namespace BKlink
             return -1;
         }
 
-
+        
 
         //获取弹幕信息
         public static List<DanmuInfo>[] GetbilibiliXML(int avid, List<string> namelist = null)
         {
             string v = HttpGetPage(string.Format(bilibiliURLHead, avid, 1));
 
+            if (v == null || v == string.Empty)
+            {
+                return null;
+            }
             int ppos = v.IndexOf("<option");
             int p = 1;
             int[] id;
@@ -197,12 +201,12 @@ namespace BKlink
             try
             {
                 HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-                request.Timeout = 5000;
+                request.Timeout = 10000;
                 
                 HttpWebResponse response = request.GetResponse() as HttpWebResponse;
                 Stream stream = response.GetResponseStream();
                 string v=null;
-                stream.ReadTimeout = 5000;
+                stream.ReadTimeout = 10000;
                 if (response.ContentEncoding.Contains("gzip")||gzip)
                 {
                     StreamReader reader = new StreamReader(new GZipStream(stream, CompressionMode.Decompress));
@@ -257,13 +261,22 @@ namespace BKlink
         static int FontSize = 32;
         static int movespeed = 5;
         static int savemovespeed = 5;
+        static bool resize = false;
+        static int newx, newy;
+        public static void setWindowSize(int w, int h)
+        {
+            newx = w;
+            newy = h;
+            resize = true;
+        }
+
         //static int updatetick;
         public static void StartPlay(int w, int h, Graphics g,Color back,Font font=null)
         {
             if (!playstate)
             {
                 DW = w;
-                DH = h;
+                DH = h-FontSize;
                 movespeed = savemovespeed;
                 double addspeed = (double)w / 810F;
                 if(addspeed>1)
@@ -309,6 +322,27 @@ namespace BKlink
                         {
                             Thread.Sleep(1);
                             continue;
+                        }
+                        if (resize)
+                        {
+                            resize = false;
+                            w = newx;
+                            h = newy;
+                            map.Dispose();
+                            draw.Dispose();
+                            DW = w;
+                            DH = h - FontSize;
+                            movespeed = savemovespeed;
+                            addspeed = (double)w / 810F;
+                            if (addspeed > 1)
+                                movespeed = (int)(movespeed * addspeed);
+                            //if (font != null) drawfont = font;
+                            map = new Bitmap(w, h);
+                            draw = Graphics.FromImage(map);
+                            ysize = FontSize;
+                            moveLine = new DanmuInfo[(int)(h / ysize)];
+                            centLine = new DanmuInfo[(int)(h / ysize)];
+                            Time = Time;
                         }
                         if (danmudata != null)
                         {
@@ -402,6 +436,8 @@ namespace BKlink
                                             break;
                                     }
                                     if (i == moveLine.Length)
+                                        break;
+                                    if (i == centLine.Length)
                                         break;
                                 }
                         }
