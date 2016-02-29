@@ -411,7 +411,7 @@ namespace BKlink
                                             }
                                             break;
                                         case DanmuType.bottom:
-                                            for (i = centLine.Length-1; i >0; i--)
+                                            for (i = centLine.Length-1; i >=0; i--)
                                             {
                                                 if (centLine[i] == null)
                                                 {
