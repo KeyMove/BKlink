@@ -284,6 +284,8 @@ namespace BKlink
                 //if (font != null) drawfont = font;
                 map = new Bitmap(w, h);
                 draw = Graphics.FromImage(map);
+                draw.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
+                draw.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixel;
                 playstate = true;
                 danmucount = 0;
                 drawtime = 0;
@@ -339,6 +341,8 @@ namespace BKlink
                             //if (font != null) drawfont = font;
                             map = new Bitmap(w, h);
                             draw = Graphics.FromImage(map);
+                            draw.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
+                            draw.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixel;
                             ysize = FontSize;
                             moveLine = new DanmuInfo[(int)(h / ysize)];
                             centLine = new DanmuInfo[(int)(h / ysize)];
